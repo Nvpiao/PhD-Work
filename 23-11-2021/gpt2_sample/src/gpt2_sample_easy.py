@@ -36,6 +36,7 @@ def get_gradio_fn(sentence, max_len, do_sample, num_return_sequences):
 
 
 if __name__ == "__main__":
+
     # init model
     TEXT_GEN = get_text_generator()
 
@@ -50,7 +51,8 @@ if __name__ == "__main__":
         ],
         outputs="text"
     )
-    gradio_model.launch()
+    # gradio_model.launch()
+    gradio_model.launch(share=True)
 
 # sample
 # These paper lanterns are adorable! The colors are
