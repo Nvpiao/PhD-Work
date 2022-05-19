@@ -1,0 +1,58 @@
+{
+  "best_metric": 0.5951671600341797,
+  "best_model_checkpoint": "/homes/ml007/works/codes/30-11-2021/finetune_gpt2/model/gpt2_finetune_keywords_all_10/checkpoint-1500",
+  "epoch": 8.474074074074075,
+  "global_step": 1500,
+  "is_hyper_param_search": false,
+  "is_local_process_zero": true,
+  "is_world_process_zero": true,
+  "log_history": [
+    {
+      "epoch": 2.82,
+      "learning_rate": 0.0011407185628742515,
+      "loss": 3.8931,
+      "step": 500
+    },
+    {
+      "epoch": 2.82,
+      "eval_loss": 0.6258835792541504,
+      "eval_runtime": 74.7337,
+      "eval_samples_per_second": 25.303,
+      "eval_steps_per_second": 4.228,
+      "step": 500
+    },
+    {
+      "epoch": 5.65,
+      "learning_rate": 0.000691616766467066,
+      "loss": 0.5922,
+      "step": 1000
+    },
+    {
+      "epoch": 5.65,
+      "eval_loss": 0.6028121113777161,
+      "eval_runtime": 74.6959,
+      "eval_samples_per_second": 25.316,
+      "eval_steps_per_second": 4.23,
+      "step": 1000
+    },
+    {
+      "epoch": 8.47,
+      "learning_rate": 0.00024251497005988023,
+      "loss": 0.5439,
+      "step": 1500
+    },
+    {
+      "epoch": 8.47,
+      "eval_loss": 0.5951671600341797,
+      "eval_runtime": 74.8045,
+      "eval_samples_per_second": 25.279,
+      "eval_steps_per_second": 4.224,
+      "step": 1500
+    }
+  ],
+  "max_steps": 1770,
+  "num_train_epochs": 10,
+  "total_flos": 5.6495517990912e+16,
+  "trial_name": null,
+  "trial_params": null
+}
