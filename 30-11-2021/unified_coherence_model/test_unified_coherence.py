@@ -3,14 +3,13 @@ import torch.nn as nn
 
 import numpy as np
 import os
-import datetime
 import random
 
 import sys
 sys.path.append('./src')
 
 
-from src import utils, model, lm_model, data_load
+from src import utils, model
 
 parser = utils.argument_parser()
 args = parser.parse_args()
@@ -47,7 +46,6 @@ args.word2idx = {tok: i for i, tok in enumerate(args.vocabs)}
 args.idx2word = {i: tok for i, tok in enumerate(args.vocabs)}
 args.padding_idx = args.word2idx[args.padding_symbol]
 
-batcher = lm_model.TokenBatcher(args)
 # Sentence encoder
 sentence_encoder = model.SentenceEmbeddingModel(args).to(args.device)
 # Convolution layer for extracting global coherence patterns
