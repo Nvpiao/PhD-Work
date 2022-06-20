@@ -131,4 +131,9 @@ dmypy.json
 
 # idea configuration files
 .idea/
-/30-11-2021/finetune_gpt2/model/gpt2_finetune_keywords_all_10/checkpoint-1500/optimizer.pt
+./30-11-2021/finetune_gpt2/model/gpt2_finetune_keywords_all_10/checkpoint-1500/optimizer.pt
+
+# data
+wsj_*
+# model
+./30-11-2021/unified-coherence-model/Models/

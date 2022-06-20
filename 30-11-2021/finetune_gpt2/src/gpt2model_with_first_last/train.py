@@ -173,7 +173,7 @@ if __name__ == '__main__':
     )
     parser.add_argument("--epochs", default=10, type=int, required=False, help="train epochs")
     parser.add_argument(
-        "--batch_size", default=4, type=int, required=False, help="train batch size"
+        "--batch_size", default=2, type=int, required=False, help="train batch size"
     )
     parser.add_argument("--lr", default=1.5e-3, type=float, required=False, help="learning rate")
     parser.add_argument("--warmup_steps", default=1e2, type=float, required=False, help="lr warmup steps")

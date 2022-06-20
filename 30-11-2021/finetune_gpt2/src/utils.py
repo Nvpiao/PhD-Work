@@ -1,6 +1,10 @@
+import heapq
 import os
 
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+import joblib
+
 
 DATA_TYPE_1 = '__label1__'
 DATA_TYPE_2 = '__label2__'
@@ -28,6 +32,30 @@ def split_data(data, split_ratio, data_type=DATA_TYPE_1):
     test_set_type_2 = data_type_2[~data_type_2.index.isin(train_set_type_2.index)]
 
     return train_set, test_set, train_set_type_1, test_set_type_1, train_set_type_2, test_set_type_2
+
+
+def tfidf_keywords_converter(data, topk=10):
+    corpus = data['REVIEW_TEXT']
+    vectorizer = TfidfVectorizer(stop_words='english')
+
+    tfidf = vectorizer.fit_transform(corpus)
+    # save model
+    joblib.dump(vectorizer, '../model/tfidf_keywords_20.pkl')
+
+    word = vectorizer.get_feature_names()
+    weight = tfidf.toarray()
+    keywords_list = []
+    for i in range(len(data)):
+        row = weight[i]
+        index = heapq.nlargest(topk, range(len(row)), row.__getitem__)
+        review_keywords = ""
+        for j in range(len(index)):
+            if weight[i][index[j]] != 0:
+                review_keywords += ' ' + word[index[j]]
+        keywords_list.append(review_keywords)
+        # data[i]['REVIEW_KEYWORDS'] = review_keywords
+    data.insert(0, 'REVIEW_KEYWORDS', keywords_list)
+    return data, vectorizer
 
 
 if __name__ == '__main__':

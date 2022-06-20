@@ -6,6 +6,9 @@ import numpy as np
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, GPT2Config, TrainingArguments, Trainer
 
+import sys
+sys.path.append('/homes/ml007/works/codes/30-11-2021/finetune_gpt2/src')
+
 from gpt2model.dataset import AmazonDataset, get_train_val_dataloader
 from utils import read_data, split_data
 
