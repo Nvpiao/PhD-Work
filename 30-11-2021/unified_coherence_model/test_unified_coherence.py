@@ -6,8 +6,7 @@ import os
 import random
 
 import sys
-sys.path.append('./src')
-
+sys.path.append('../../unified_coherence_model')
 
 from src import utils, model
 
@@ -58,10 +57,6 @@ local_global_model = nn.Sequential(sentence_encoder,
                                    bilinear_layer,
                                    global_feature_extractor,
                                    coherence_scorer)
-optimizer = torch.optim.Adam(
-    local_global_model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-scheduler = torch.optim.lr_scheduler.StepLR(
-    optimizer, step_size=args.learning_rate_step, gamma=args.learning_rate_decay)
 
 def calculate_scores(batch, test=True):
     '''
@@ -149,41 +144,42 @@ def calculate_scores(batch, test=True):
     return pos_doc_score
 
 
-print(f"Test start...")
-with torch.no_grad():
-    # best_dir = f"./Models/Best/"
-    best_dir = f"./Models/ELMo/"
+if __name__ == "__main__":
+    print(f"Test start...")
+    with torch.no_grad():
+        # best_dir = f"./Models/Best/"
+        best_dir = f"./Models/ELMo/"
 
-    model_name = f"Epoch_6_MMdd_6_7"
-    # model_name = f"Epoch_11_MMdd_6_6_google"
+        model_name = f"Epoch_6_MMdd_6_7"
+        # model_name = f"Epoch_11_MMdd_6_6_google"
 
-    model_save_path = os.path.join(
-        best_dir, model_name)
-    local_global_model.load_state_dict(torch.load(model_save_path, map_location=args.device))
-    local_global_model.eval()
+        model_save_path = os.path.join(
+            best_dir, model_name)
+        local_global_model.load_state_dict(torch.load(model_save_path, map_location=args.device))
+        local_global_model.eval()
 
-    # 3d list.  [pdoc0, pdoc1, ..] -> [sent1, sent2, ..] -> [word1, word2, ..]
-    batches = [
-        [
-            ".START",
-            "McDermott International Inc. said its Babcock & Wilcox unit completed the sale of its Bailey Controls Operations to Finmeccanica S.p.",
-            "A. for $295 million.",
-            "Finmeccanica is an Italian state-owned holding company with interests in the mechanical engineering industry.",
-            "Bailey Controls, based in Wickliffe, Ohio, makes computerized industrial controls systems.",
-            "It employs 2,700 people and has annual revenue of about $370 million."],
-        [
-             "McDermott International Inc. said its Babcock & Wilcox unit completed the sale of its Bailey Controls Operations to Finmeccanica S.p.",
-             ".START", "A. for $295 million.",
-             "Finmeccanica is an Italian state-owned holding company with interests in the mechanical engineering industry.",
-             "Bailey Controls, based in Wickliffe, Ohio, makes computerized industrial controls systems.",
-             "It employs 2,700 people and has annual revenue of about $370 million."]
-    ]
+        # 3d list.  [pdoc0, pdoc1, ..] -> [sent1, sent2, ..] -> [word1, word2, ..]
+        batches = [
+            [
+                ".START",
+                "McDermott International Inc. said its Babcock & Wilcox unit completed the sale of its Bailey Controls Operations to Finmeccanica S.p.",
+                "A. for $295 million.",
+                "Finmeccanica is an Italian state-owned holding company with interests in the mechanical engineering industry.",
+                "Bailey Controls, based in Wickliffe, Ohio, makes computerized industrial controls systems.",
+                "It employs 2,700 people and has annual revenue of about $370 million."],
+            [
+                 "McDermott International Inc. said its Babcock & Wilcox unit completed the sale of its Bailey Controls Operations to Finmeccanica S.p.",
+                 ".START", "A. for $295 million.",
+                 "Finmeccanica is an Italian state-owned holding company with interests in the mechanical engineering industry.",
+                 "Bailey Controls, based in Wickliffe, Ohio, makes computerized industrial controls systems.",
+                 "It employs 2,700 people and has annual revenue of about $370 million."]
+        ]
 
-    batch = []
-    for doc in batches:
-        batch.append([sentence.split() for sentence in doc])
+        batch = []
+        for doc in batches:
+            batch.append([sentence.split() for sentence in doc])
 
-    score = calculate_scores(batch, test=True)
+        score = calculate_scores(batch, test=True)
 
-    # Accuracy at a certain Epoch
-    print(f"Test Score: {score}")
+        # Accuracy at a certain Epoch
+        print(f"Test Score: {score}")

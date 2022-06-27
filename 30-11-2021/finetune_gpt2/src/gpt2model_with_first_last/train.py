@@ -7,10 +7,10 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, GPT2Config, TrainingArguments, Trainer
 
 import sys
-sys.path.append('/homes/ml007/works/codes/30-11-2021/finetune_gpt2/src')
+sys.path.append('../../')
 
 from gpt2model_with_first_last.dataset import AmazonDataset, get_train_val_dataloader
-from utils import read_data, split_data, tfidf_keywords_converter
+from finetune_gpt2.src.utils import read_data, split_data, tfidf_keywords_converter
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -171,7 +171,7 @@ if __name__ == '__main__':
         required=False,
         help="path of train sets",
     )
-    parser.add_argument("--epochs", default=10, type=int, required=False, help="train epochs")
+    parser.add_argument("--epochs", default=20, type=int, required=False, help="train epochs")
     parser.add_argument(
         "--batch_size", default=2, type=int, required=False, help="train batch size"
     )
@@ -190,10 +190,10 @@ if __name__ == '__main__':
         "--print_loss", default=1, type=int, required=False, help="steps of printing training loss"
     )
     parser.add_argument(
-        "--output_dir", default=os.path.join(path, 'model/gpt2_finetune_first_last_all_10'), type=str, required=False,
+        "--output_dir", default=os.path.join(path, 'model/gpt2_finetune_first_last_all_20'), type=str, required=False,
         help="path of output model"
     )
-    parser.add_argument("--logging_dir", default=os.path.join(path, 'model/gpt2_finetune_first_last_all_10/logs'),
+    parser.add_argument("--logging_dir", default=os.path.join(path, 'model/gpt2_finetune_first_last_all_20/logs'),
                         type=str, required=False, help="log dir")
     parser.add_argument(
         "--seed", default=2022, type=int, required=False, help="python hash seed"

@@ -4,10 +4,13 @@ import json
 import pickle
 import torch
 import numpy as np
+#
+# from allennlp.modules.elmo import Elmo
+# from allennlp.modules.elmo import batch_to_ids
 
-from allennlp.modules.elmo import Elmo
-from allennlp.modules.elmo import batch_to_ids
-
+import sys
+parent_path = f'../../unified_coherence_model/'
+sys.path.append(f'../../unified_coherence_model/')
 
 def argument_parser():
     parser = argparse.ArgumentParser()
@@ -26,9 +29,9 @@ def argument_parser():
     parser.add_argument('--file_list_test', type=str, default="./Data/Dataset_Global/wsj.dev",
                         help='Only for Global Dataset: test/Dev Data list')
     parser.add_argument('--pre_embedding_path', type=str,
-                        default="./Models/GoogleNews/GoogleNews-vectors-negative300.bin", help='Pretrained word embedding path')
+                        default=parent_path + "./Models/GoogleNews/GoogleNews-vectors-negative300.bin", help='Pretrained word embedding path')
     parser.add_argument('--vocab_path', type=str,
-                        default="./Data/Dataset_Global/Dataset/vocab/Vocab", help='Vocab path')
+                        default=parent_path + "./Data/Dataset_Global/Dataset/vocab/Vocab", help='Vocab path')
     parser.add_argument('--padding_symbol', type=str,
                         default="<pad>", help='Vocab path')
     # Training Parameter-------------------------------------------------------------
@@ -86,11 +89,11 @@ def argument_parser():
 
     embedding = parser.add_mutually_exclusive_group()
     embedding.add_argument('--GoogleEmbedding', type=bool,
-                           default=False, help='Google embedding')
+                           default=True, help='Google embedding')
     embedding.add_argument('--RandomEmbedding', type=bool,
                            default=False, help='Random embedding')
     embedding.add_argument('--ELMo', type=bool,
-                           default=True, help='ELMo embedding')
+                           default=False, help='ELMo embedding')
     parser.add_argument('--ELMo_Size', type=str,
                         default='small', help='Size of ELMo')
     parser.add_argument('--bilinear_dim', type=int,

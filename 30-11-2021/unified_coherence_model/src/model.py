@@ -8,7 +8,9 @@ import copy
 
 from fairseq.modules import LightweightConv1dTBC
 
-import utils
+import sys
+sys.path.append('../../unified_coherence_model')
+from unified_coherence_model.src import utils
 
 
 class SentenceEmbeddingModel(nn.Module):

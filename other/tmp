@@ -1,0 +1,22 @@
+This is just what I wanted and it is more protective than anticipated. 
+
+A + soft and nice to touch
+
+generated_sens.append(split_into_sentences(text[text_len:])[0].strip())
+IndexError: list index out of range
+
+
+
+Toys:
+
+This maze was a part of the present my daughter got for her 9th birthday.
+
+Love that there are toys that develop those good qualities in kids.
+
+
+bag:
+
+I was initially quite pleased with bag. 
+
+The major issue is the shoulder strap, its small.
+
