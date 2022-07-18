@@ -33,12 +33,16 @@ def split_into_sentences(text):
     text = text.replace("?","?<stop>")
     text = text.replace("!","!<stop>")
     text = text.replace("<prd>",".")
+    text = text.replace("<br/>","\n")
+    text = text.replace("<br />","\n")
     sentences = text.split("<stop>")
-    sentences = sentences[:-1]
-    sentences = [s.strip() for s in sentences]
-    return sentences
+    res = []
+    for sen in sentences:
+        if len(sen) > 2:
+            res.append(sen.strip())
+    return res
 
 if __name__ == '__main__':
-    sentences = split_into_sentences("This screen protector is a great value and very well made.<br /><p />I am 5'9'' so far, but this one does not look like that big of an improvement from previous generations...it just feels more solid than before with no scratches or anything else on either side.")
-
+    # sentences = split_into_sentences("This screen protector is a great value and very well made.<br /><p />I am 5'9'' so far, but this one does not look like that big of an improvement from previous generations...it just feels more solid than before with no scratches or anything else on either side.")
+    sentences = split_into_sentences("wonderful headphones had them now for 5 months and works great also great price and the sound is very clear and loud and soft the the ears love my headphones not to mention that they are sony")
     print(sentences)

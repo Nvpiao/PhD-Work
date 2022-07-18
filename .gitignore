@@ -138,3 +138,7 @@ wsj_*
 # model
 /30-11-2021/unified_coherence_model/Models/
 /30-11-2021/finetune_gpt2/model/
+
+
+.vscode
+wandb

@@ -5,17 +5,18 @@ To-Do-List:
 """
 import numpy as np
 import copy
-import pdb
-import os, sys
+import os
 import random
 import re
 import pickle
 import itertools
-import argparse
-from shutil import copyfile
-import json
+import torch
+import pandas as pd
 
+import sys
+sys.path.append('../../../')
 
+from gpt2_coherence_ranker.src import sentence_split
 
 def Check_Dir(path):
     if not os.path.exists(path): # check directory 
@@ -39,6 +40,47 @@ def Load_Document(load_path):
     with open(load_path, 'rb') as fp:
         Document = pickle.load(fp)
     return Document
+
+def Read_Amazon_Document(file_path):
+
+    """
+    1) Read_File_Path
+    2) Read_Document
+    3) Return training and test documents
+    """
+    columns = [
+        'DOC_ID',
+        'LABEL',
+        'RATING',
+        'VERIFIED_PURCHASE',
+        'PRODUCT_CATEGORY',
+        'PRODUCT_ID',
+        'PRODUCT_TITLE',
+        'REVIEW_TITLE',
+        'REVIEW_TEXT'
+    ]
+
+
+    amazon_data = pd.read_csv(file_path, sep='\t', header=None, names=columns, skiprows=1)
+    seed_everything(2022)
+    amazon_data_20 = amazon_data.sample(frac=0.2, replace=False)
+    amazon_data_80 = amazon_data[~amazon_data.index.isin(amazon_data_20.index)]
+
+    training_document = extract_data(amazon_data_80)
+    test_document = extract_data(amazon_data_20)
+
+    return training_document, test_document
+
+
+def extract_data(amazon_data_80):
+    res_document = {}
+
+    for index, row_data in amazon_data_80.iterrows():
+        doc_name = 'amazon_review_' + str(row_data['DOC_ID'])
+        splitted_rows = sentence_split.split_into_sentences(row_data['REVIEW_TEXT'])
+        res_document[doc_name] = np.array(splitted_rows)
+
+    return res_document
 
 def Read_Document_List(path, n_sent, file_type):
     """
@@ -178,12 +220,14 @@ class Dataset_Processing():
         n_window: list of the number of windows
         dataset_type: 'train' or 'test'
         """
-        training_document, test_document, File_Path_Text = Read_Document_List(read_path, n_sent=self.n_sent, file_type = 'text')
+        # training_document, test_document, File_Path_Text = Read_Document_List(read_path, n_sent=self.n_sent, file_type = 'text')
         # training_document_egrid, test_document_egrid, File_Path_EGrid = Read_Document_List(read_path, n_sent=self.n_sent, file_type = 'egrid')
+
+        training_document, test_document, = Read_Amazon_Document(self.path)
 
         self.Creating_Dataset(training_document, dataset_type='train')
         self.Creating_Dataset(test_document, dataset_type='test')
-    
+
     def Creating_Dataset(self, Documents, dataset_type):
         """
         - Documents are the dictionary type
@@ -200,22 +244,12 @@ class Dataset_Processing():
             pos_dir = os.path.join(os.getcwd(), 'training')
             neg_dir = os.path.join(os.getcwd(), 'training_perm')
 
-            pos_dir_egrid = os.path.join(os.getcwd(), 'training_egrid')
-            neg_dir_egrid = os.path.join(os.getcwd(), 'training_perm_egrid')
-
         else:
             pos_dir = os.path.join(os.getcwd(), 'test')
             neg_dir = os.path.join(os.getcwd(), 'test_perm')
-            #
-            # pos_dir_egrid = os.path.join(os.getcwd(), 'test_egrid')
-            # neg_dir_egrid = os.path.join(os.getcwd(), 'test_perm_egrid')
 
         Check_Dir(pos_dir)
         Check_Dir(neg_dir)
-
-        # Check_Dir(pos_dir_egrid)
-        # Check_Dir(neg_dir_egrid)
-
 
         for file_name, text in Documents.items():
             print(f"Processing {file_name}") 
@@ -229,10 +263,6 @@ class Dataset_Processing():
             # Save positive text file
             save_path = os.path.join(pos_dir, text_name) # Define save path
             Save_Document(save_path, Document, doc_type='text') # save positive documents
-
-            # Save positive grid file
-            # save_path = os.path.join(pos_dir_egrid, egrid_file) # Define save path
-            # Save_Document(save_path, EGrid, doc_type='egrid') # save positive egrid
 
             for n, p in zip(self.n_window, self.perm):
                 # window_idx is the all possible window indices
@@ -270,11 +300,6 @@ class Dataset_Processing():
                     if len(Permuted_Document)!=len(Document):
                         print(f"Errorneous File: {save_name}") 
                     Save_Document(save_path, Permuted_Document, doc_type='text') # save negative documents
-                    #
-                    # save_name_egrid = egrid_file + '_' + str(n) + '_' + str(i)
-                    # save_path = os.path.join(neg_dir_egrid, save_name_egrid)
-                    # Save_Document(save_path, Permuted_EGrid, doc_type='egrid') # save negative documents
-
 
 
 
@@ -346,7 +371,7 @@ def Sentence_Window(Document, n_window, window_size, perm, overlap=False):
     docu_length = len(Document)
     
 
-    assert n_window <= docu_length/window_size, "The number of windows should be smaller"
+    # assert n_window <= docu_length/window_size, "The number of windows should be smaller"
 
     window_start = Get_Window_Starting_Points(docu_length, window_size)
 
@@ -507,17 +532,30 @@ def Read_Files(path, text=True):
 #
 #                copyfile(load_path, save_path)
 
+def seed_everything(seed):
+    """
+    set seed
+    :param seed:
+    :return:
+    """
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 if __name__ =='__main__':
-    random.seed(2022)
+    seed_everything(2022)
 
 
     #read_path = './test/test/'
-    read_path = '../../Data/raw-wsj'
+    read_file = '../../Data/Amazon/amazon_reviews_80.txt'
     n_window = [1, 2, 3]
     perm = [20, 20, 20] # max # of perm
 
-    dataset = Dataset_Processing(read_path, n_sent=10, n_window=n_window, window_size=3, perm=perm)
+    dataset = Dataset_Processing(read_file, n_sent=10, n_window=n_window, window_size=3, perm=perm)
     dataset.Create_Dataset()
 
 

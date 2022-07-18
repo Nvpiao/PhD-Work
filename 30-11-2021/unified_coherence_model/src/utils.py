@@ -4,13 +4,9 @@ import json
 import pickle
 import torch
 import numpy as np
-#
-# from allennlp.modules.elmo import Elmo
-# from allennlp.modules.elmo import batch_to_ids
 
 import sys
-parent_path = f'../../unified_coherence_model/'
-sys.path.append(f'../../unified_coherence_model/')
+sys.path.append(f'../')
 
 def argument_parser():
     parser = argparse.ArgumentParser()
@@ -21,17 +17,17 @@ def argument_parser():
     parser.add_argument('--n_window', type=int, default=3,
                         help='Number of permutation window. Only for local. values: 1/2/3')
     parser.add_argument('--train_path', type=str,
-                        default="./Data/Dataset_Global/Dataset/train/", help='Train paired Data')  # "../data-global/train/"
+                        default="./Data/Amazon/Dataset/train/", help='Train paired Data')  # "../data-global/train/"
     parser.add_argument('--test_path', type=str,
-                        default="./Data/Dataset_Global/Dataset/test/", help='test/Dev paired Data')
-    parser.add_argument('--file_list_train', type=str, default="./Data/Dataset_Global/wsj.train",
+                        default="./Data/Amazon/Dataset/test/", help='test/Dev paired Data')
+    parser.add_argument('--file_list_train', type=str, default="./Data/Amazon/wsj.train",
                         help='Only for Global Dataset: Train Data list')
-    parser.add_argument('--file_list_test', type=str, default="./Data/Dataset_Global/wsj.dev",
+    parser.add_argument('--file_list_test', type=str, default="./Data/Amazon/wsj.dev",
                         help='Only for Global Dataset: test/Dev Data list')
     parser.add_argument('--pre_embedding_path', type=str,
-                        default=parent_path + "./Models/GoogleNews/GoogleNews-vectors-negative300.bin", help='Pretrained word embedding path')
+                        default="./Models/GoogleNews/GoogleNews-vectors-negative300.bin", help='Pretrained word embedding path')
     parser.add_argument('--vocab_path', type=str,
-                        default=parent_path + "./Data/Dataset_Global/Dataset/vocab/Vocab", help='Vocab path')
+                        default="./Data/Amazon/Dataset/vocab/Vocab", help='Vocab path')
     parser.add_argument('--padding_symbol', type=str,
                         default="<pad>", help='Vocab path')
     # Training Parameter-------------------------------------------------------------
@@ -50,9 +46,9 @@ def argument_parser():
     parser.add_argument('--device', type=str, default='cuda', help='CPU? GPU?')
     # Minibatch argument
     parser.add_argument('--batch_size_train', type=int,
-                        default=2, help='Mini batch size')
+                        default=4, help='Mini batch size')
     parser.add_argument('--batch_size_test', type=int,
-                        default=2, help='Mini batch size for test/dev')
+                        default=4, help='Mini batch size for test/dev')
     parser.add_argument('--shuffle', type=bool,
                         default=True, help='shuffle items')
     parser.add_argument('--file_type', type=str,
@@ -124,25 +120,6 @@ def print_args(args):
 
     print("---------------------------------------------------------")
     print("---------------------------------------------------------\n")
-
-
-def get_ELMo_layer(weight_size, num_output_representations=2, dropout=0):
-
-    if weight_size == 'large':
-        weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5'
-        options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json'
-    elif weight_size == 'medium':
-        weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5'
-        options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json'
-    elif weight_size == 'small':
-        weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5"
-        options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json"
-    else:
-        print("Weight size should in large, medium or small")
-
-    elmo = Elmo(options_file, weight_file, num_output_representations=2,
-                dropout=0.5, requires_grad=False)  # use this as a embedding layer
-    return elmo
 
 
 def load_file(path, file_type):
@@ -273,37 +250,6 @@ def batch_preprocessing(batch, args):
     modified_batch_sentences_len = padded_batch_senteces_len(
         batch_sentences_len, padded_batch.size(1))
     return padded_batch.to(args.device), batch_docs_len, batch_sentences_len, modified_batch_sentences_len
-
-
-def batch_preprocessing_elmo(batch, args):
-    # 2D list containing all tokenized sentences from all the docs in batch  [[sent1], [sent2]]
-    all_batch_sentences = []
-    # 1D numpy array containing len of each sentences in each docs after padding
-    modified_sentence_len = []
-    # 1D list containing len of docs (num of sentences in each docs)
-    batch_docs_len = [len(batch[i]) for i in range(len(batch))]
-    # 2D list containing len of each sentences in each docs [doc->len_sent]
-    batch_sentences_len = batch_sentences_length(batch)
-
-    max_doc_len = max(batch_docs_len)
-    pad_token = [args.padding_symbol]
-    for doc in batch:
-        if len(doc) < max_doc_len:
-            for _ in range(max_doc_len-len(doc)):
-                doc.append(pad_token)
-        for sent in doc:
-            modified_sentence_len.append(len(sent))
-            all_batch_sentences.append(sent)
-    # Converts a batch of tokenized sentences to a tensor representing the sentences with encoded characters
-    # (len(batch), max sentence length, max word length[char]).
-    all_batch_sents_enc_char = batch_to_ids(
-        all_batch_sentences).to(args.device)
-    # Converting to batch-mode again. 4D tensor  [doc] -> [sent] -> [word] -> [char]
-    d0, d1, d2 = all_batch_sents_enc_char.size()
-    all_batch_sents_enc_char = all_batch_sents_enc_char.view(
-        args.batch_size_train, -1, d1, d2)
-    return all_batch_sents_enc_char, batch_docs_len, batch_sentences_len, np.asarray(modified_sentence_len).reshape(args.batch_size_train, -1)
-
 
 def order_creator_standard(pos_batch, neg_batch, batch_docs_len, device):
     '''

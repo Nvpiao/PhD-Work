@@ -105,7 +105,7 @@ class Pos_Neg_Pairing():
         """
         dir_paths = os.walk(self.pos_path) # Return Generator
         if self.text==True:
-            pattern = r"^wsj+_\d+$"
+            pattern = r"^amazon_review+_\d+$"
             regex = re.compile(pattern)
 
             # Enter subfolders. ex) 01, 02, 03....
@@ -149,16 +149,16 @@ class Pos_Neg_Pairing():
         pos_filename = str(pos_file_name)
         if self.text==True:
             if self.window==0:
-                pattern = re.escape(pos_filename)+r".+$"
+                pattern = re.escape(pos_filename)+r"_.+$"
             elif self.window!=0:
-                pattern = re.escape(pos_filename)+r"."+re.escape(str(self.window))+r".*$"
+                pattern = re.escape(pos_filename)+r"_."+re.escape(str(self.window))+r".*$"
             else:
                 print("window should be \{0, 1, 2, 3\}")
         else:
             if self.window==0:
-                pattern = re.escape(pos_filename)+r".*$"
+                pattern = re.escape(pos_filename)+r"_.*$"
             elif self.window!=0:
-                pattern = re.escape(pos_filename)+r"."+re.escape(str(self.window))+r".*$"
+                pattern = re.escape(pos_filename)+r"_."+re.escape(str(self.window))+r".*$"
             else:
                 print("window should be \{0, 1, 2, 3\}")
 

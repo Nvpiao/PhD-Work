@@ -1,7 +1,10 @@
 from typing import Set, Tuple
 import numpy as np
 import torch
-from allennlp.common.checks import ConfigurationError
+
+import sys
+sys.path.append(f'../')
+
 from src import utils
 
 

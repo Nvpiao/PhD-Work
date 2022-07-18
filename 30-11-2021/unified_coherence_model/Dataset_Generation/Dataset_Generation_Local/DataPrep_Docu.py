@@ -47,23 +47,50 @@ class ReadTxtFiles():
         for fname in os.listdir(self.dirname):
             for line in open(os.path.join(self.dirname, fname), encoding='latin'):
                 line = Sentence_Cleaner(line)
+                if len(line) == 0 or (len(line) == 1 and line[0] == ''):
+                    continue
                 yield line
 
 def NormalizeString(s):
     if type(s)==list:
         s = " ".join(s)
-    s = s.strip()
-#    s = s.lower().strip()
+    s = s.lower().strip()
+    s = re.sub(r"([(]|[)]|\[|])", r"", s) # remove (, )
     s = re.sub(r"(<s>|</s>)", r"", s) # remove <s>, </s>
-#    s = re.sub(r"('s|'d|'ll|'t|'n)", r"", s) # Remove contraction
-#    s = re.sub(r"([\d]+s)", r"", s) # remove words like '1950s'
-#    s = re.sub(r"([.!?])", r" ", s) 
+    s = re.sub(r"('s|'d|'ll|'t|'n)", r"", s) # Remove contraction
+    s = re.sub(r"([\d]+s)", r"", s) # remove words like '1950s'
+    s = re.sub(r"([\\\"\':\*])", r"", s) # remove \ " ' : *
+    s = re.sub(r"([,.!?])", r" ", s)
+    s = re.sub(r"(/)", r" ", s)
+    s = re.sub(r"(&#34;)", r" ", s)
+    s = re.sub(r"(\%\&\$\#)", r" ", s)
+    s = re.sub(r"(&#;)", r" ", s)
+    s = re.sub(r"(&#)", r" ", s)
+    s = re.sub(r"(\&quot)", r" ", s)
+    s = re.sub(r"(;)", r" ", s)
+    s = re.sub(r"([<>])", r" ", s)
+    s = re.sub(r"(--)", r"-", s)
+    s = re.sub(r"([\u00b7\u00b8\u0090\u0088\u00e6\u00ac\u00a5\u0089\u008d\u0097\u00eb\u0087\u0092\u0093\u008e\u0081\u00a7\u0082\u00e8\u00bf\u00e5\u00e9\u00b0\u00ba\u00e7\u008a\u0084\u00a2\u00d7\u00aa\u00ab\u00a6\u0096\u00b6\u00be\u00b3\u00af\u0091\u008c\u00bd\u0094\u00a3\u0086\u00b4\u00a1\u008b\u00f0\u009f\u0098\u009e\u00ae\u00a9\u00a8\u008f\u00e2\u0080\u0099\u00e3\u00b1\u00ef\u00bc\u009a\u009c\u009d\u00ad])", r" ", s)
 #    s = re.sub(r"[^a-zA-Z.!?@]+", r" ", s)
 #    s = "<s>"+s+"</s>"
 
 #    s = re.sub(r"[^a-zA-Z]+", r" ", s)
 #    s = re.sub(r"\d+", r"", s)
     return s
+
+def remove_underline(word):
+    # remove \ " ' : *
+    return word.strip('#')\
+        .lstrip('%')\
+        .lstrip('$')\
+        .strip('@') \
+        .strip('-')
+        # .strip('\\') \
+        # .strip('\"') \
+        # .strip('\'') \
+        # .strip(':') \
+        # .strip('*')
+
 
 def StopWords(sent):
     sent = sent.split()
@@ -99,6 +126,8 @@ def Sentence_Cleaner(sent):
     """
     sent = NormalizeString(sent)
     sent = sent.split()
+    sent = [s for s in sent if s]
+    sent = list(map(remove_underline, sent))
     #sent = StopWords(sent)
     return sent
 
@@ -109,7 +138,7 @@ def Document_Normalizer(doc):
     normalized_doc = []
     for sent in doc:
         sent = Sentence_Cleaner(sent)
-        if len(sent) ==0:
+        if len(sent) == 0 or (len(sent) == 1 and sent[0] == ''):
             continue
         normalized_doc.append(" ".join(sent))
         #normalized_doc.append(sent)
@@ -152,7 +181,7 @@ def Build_Vocab(word_count, ratio=0.8):
 
     # Take N frequent vocabs only
     Vocab = word_count[:int(n_vocab*ratio)] 
-    Vocab = [tup[0] for tup in word_count[:int(n_vocab*ratio)]]    
+    Vocab = [tup[0] for tup in word_count[:int(n_vocab*ratio)] if len(tup[0]) < 20]
 
     # Append special tokens
     Vocab.append('<unk>')
@@ -228,7 +257,7 @@ if __name__ =="__main__":
     Pos_Generator = Data_Load.Doc_Generator(args.train_pos, pos_file_names)
 
     word_count = Word_Counter(args.train_pos)
-    Vocab = Build_Vocab(word_count, ratio=1.0)
+    Vocab = Build_Vocab(word_count, ratio=1)
     word2idx, idx2word = Word_Dictionary(Vocab)
 
     savepath = Data_Load.Create_Path(args.vocab_save_path, 'Vocab')
@@ -243,6 +272,8 @@ if __name__ =="__main__":
     for pos_doc, pos_filename in Pos_Generator:
         doc_len = Data_Load.Doc_Size(pos_doc)
         neg_file_list = Paired_Files.Load_Neg_Names(pos_filename)
+        if not neg_file_list:
+            continue
         Neg_Generator = Data_Load.Doc_Generator(args.train_neg, neg_file_list)
 
         pos_doc = Document_Normalizer(pos_doc)
@@ -265,6 +296,8 @@ if __name__ =="__main__":
     for pos_doc, pos_filename in Pos_Generator:
         doc_len = Data_Load.Doc_Size(pos_doc)
         neg_file_list = Paired_Files.Load_Neg_Names(pos_filename)
+        if not neg_file_list:
+            continue
         Neg_Generator = Data_Load.Doc_Generator(args.test_neg, neg_file_list)
 
         pos_doc = Document_Normalizer(pos_doc)

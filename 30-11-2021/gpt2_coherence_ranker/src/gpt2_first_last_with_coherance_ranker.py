@@ -159,6 +159,7 @@ def get_gradio_fn(first_sentence, last_sentence, max_len, num_return_sequences, 
                 for i, output in enumerate(generated_res):
                     text = GPT2_FINETUNE_TOKENIZER.decode(output, skip_special_tokens=True)
                     text_len = len(first) + len(last)
+                    # TODO  fix null pointer bug
                     generated_sens.append(split_into_sentences(text[text_len:])[0].strip())
 
                 #print('generated_sentences: ', "\r\n".join(generated_sens), '\r\n')

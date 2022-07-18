@@ -27,6 +27,7 @@ else:
 args = parser.parse_args()
 
 # Device Setting
+# args.device = torch.device('cpu')
 if torch.cuda.is_available():
     args.device = torch.device('cuda')
     print(f"Running on GPU")
@@ -154,10 +155,11 @@ def calculate_scores(batch, test=False):
             else:
                 neg_doc_order = utils.order_creator_standard(
                     pos_batch, neg_batch, batch_docs_len, device=args.device)
+
             hidden_out = torch.zeros_like(hidden)
             for i in range(args.batch_size_train):
-                hidden_out[i, :, :] = torch.index_select(
-                    hidden[i, :, :], dim=0, index=neg_doc_order[i])
+                hidden_out[i, :, :] = \
+                    torch.index_select(hidden[i, :, :], dim=0, index=neg_doc_order[i])
 
         ### Global Feature ###
         # make the time dim to first, batch to second - for lightweight conv.  [doc_max_len -> batch_size -> 2*args.hidden_dim]
@@ -236,8 +238,6 @@ Best_Result = 0
 print('Start training.')
 for epoch in range(args.Epoch):
     start_train = time.perf_counter()  # Measure one epoch training time
-    scheduler.step()
-    scheduler_lm.step()
     local_global_model.train()
     lm_loss_model.train()
 
@@ -267,6 +267,9 @@ for epoch in range(args.Epoch):
         n_TP_train += n_correct_train
         if (n_mini_batch+1) % 500 == 0:
             print(f"Time: {datetime.datetime.now().time()} || Epoch: {epoch + 1} || N_Mini_Batch: {n_mini_batch + 1} || Mini_Batch_Acc: {sum(score_comparison)/args.batch_size_train}|| LM loss: {lm_loss}|| Total Loss: {total_loss}")
+
+    scheduler.step()
+    scheduler_lm.step()
 
     acc_epoch = n_TP_train / n_data_train  # Accuracy at a certain Epoch
     end_train = time.perf_counter()
